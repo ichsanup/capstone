@@ -29,9 +29,9 @@ class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
     private lateinit var currentPhotoPath: String
     private lateinit var bitmap: Bitmap
+    private var getFile: File? = null
 
     companion object {
-
         private val REQUIRED_PERMISSIONS = arrayOf(Manifest.permission.CAMERA)
         private const val REQUEST_CODE_PERMISSIONS = 10
     }
@@ -91,12 +91,13 @@ class MainActivity : AppCompatActivity() {
         bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, uri)
     }
 
-    fun getMax(array: FloatArray):Int{
+    //dapetin index dari label
+    fun getMax(array: FloatArray): Int {
         var ind = 0
         var min = 0.0f
 
-        for (i in 0..1000){
-            if (array[i]>min){
+        for (i in 0..4) {
+            if (array[i] > min) {
                 ind = i
                 min = array[i]
             }
@@ -126,6 +127,7 @@ class MainActivity : AppCompatActivity() {
     ) {
         if (it.resultCode == RESULT_OK) {
             val myFile = File(currentPhotoPath)
+            getFile = myFile
             val result = BitmapFactory.decodeFile(myFile.path)
             binding.previewImageView.setImageBitmap(result)
         }
@@ -145,37 +147,48 @@ class MainActivity : AppCompatActivity() {
         if (result.resultCode == RESULT_OK) {
             val selectedImg: Uri = result.data?.data as Uri
             val myFile = uriToFile(selectedImg, this@MainActivity)
+            getFile = myFile
             binding.previewImageView.setImageURI(selectedImg)
         }
     }
 
     private fun startPredict() {
         binding.btnPredict.setOnClickListener(View.OnClickListener {
-            val fileName = "label.txt"
-            val inputString = application.assets.open(fileName).bufferedReader().use { it.readText() }
-            var townList = inputString.split("\n")
+            if (getFile!=null){
+                val reduceFile = reduceFileImage(getFile as File)//dipanggil fungsi pada utils untuk reduce file image
+                bitmap = BitmapFactory.decodeFile(reduceFile.path)
+                val fileName = "label.txt"
+                val inputString =
+                    application.assets.open(fileName).bufferedReader().use { it.readText() }
+                var townList = inputString.split("\n")
 
-            var resized: Bitmap = Bitmap.createScaledBitmap(bitmap, 150, 150, true)
-            val model = Buma.newInstance(this)
+                var resized: Bitmap = Bitmap.createScaledBitmap(bitmap, 150, 150, true)
+                val model = Buma.newInstance(this)
 
-            // Creates inputs for reference.
-            val inputFeature0 =
-                TensorBuffer.createFixedSize(intArrayOf(1, 150, 150, 3), DataType.FLOAT32)
+                // Creates inputs for reference.
+                val inputFeature0 =
+                    TensorBuffer.createFixedSize(intArrayOf(1, 150, 150, 3), DataType.FLOAT32)
+                var tensorImage = TensorImage(
+                    DataType.FLOAT32
+                )
+                tensorImage.load(resized)
 
-            var tBuffer = TensorImage.fromBitmap(resized)
-            var byteBuffer = tBuffer.buffer
-            inputFeature0.loadBuffer(byteBuffer)
+                var byteBuffer = tensorImage.buffer
+                inputFeature0.loadBuffer(byteBuffer)
 
-            // Runs model inference and gets result.
-            val outputs = model.process(inputFeature0)
-            val outputFeature0 = outputs.outputFeature0AsTensorBuffer
+                // Runs model inference and gets result.
+                val outputs = model.process(inputFeature0)
+                val outputFeature0 = outputs.outputFeature0AsTensorBuffer
 
-            var max = getMax(outputFeature0.floatArray)
+                var max = getMax(outputFeature0.floatArray)
 
-            binding.tvSelect.setText(townList[max].toString())
+                binding.tvSelect.text = townList[max].toString()
 
-            // Releases model resources if no longer used.
-            model.close()
+                // Releases model resources if no longer used.
+                model.close()
+            }else{
+                Toast.makeText(this,"Masukan Gambar dahulu",Toast.LENGTH_SHORT).show()
+            }
         })
     }
 
