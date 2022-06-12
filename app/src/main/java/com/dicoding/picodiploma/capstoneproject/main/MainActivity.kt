@@ -6,12 +6,10 @@ import android.content.Intent.ACTION_GET_CONTENT
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.media.Image
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.View
-import android.widget.ImageView
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
@@ -20,6 +18,7 @@ import androidx.core.content.ContextCompat
 import androidx.core.content.FileProvider
 import com.dicoding.picodiploma.capstoneproject.databinding.ActivityMainBinding
 import com.dicoding.picodiploma.capstoneproject.ml.Buma
+import com.dicoding.picodiploma.capstoneproject.recycleview.BumaActivity
 import org.tensorflow.lite.DataType
 import org.tensorflow.lite.support.image.TensorImage
 import org.tensorflow.lite.support.tensorbuffer.TensorBuffer
@@ -36,7 +35,6 @@ class MainActivity : AppCompatActivity() {
         private const val REQUEST_CODE_PERMISSIONS = 10
     }
 
-    //Permission
     override fun onRequestPermissionsResult(
         requestCode: Int,
         permissions: Array<out String>,
@@ -62,9 +60,6 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
 
-        //inisialisasi predik
-
-
         if (!allPermissionGranted()) {
             ActivityCompat.requestPermissions(
                 this,
@@ -80,9 +75,9 @@ class MainActivity : AppCompatActivity() {
         }
 
         setupSettings()
+        setupMoveBuma()
     }
 
-    //untuk prediksi
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         binding.previewImageView.setImageURI(data?.data)
@@ -91,7 +86,6 @@ class MainActivity : AppCompatActivity() {
         bitmap = MediaStore.Images.Media.getBitmap(this.contentResolver, uri)
     }
 
-    //dapetin index dari label
     fun getMax(array: FloatArray): Int {
         var ind = 0
         var min = 0.0f
@@ -121,7 +115,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    //untuk menampung dari intent
     private val launcherIntentCamera = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
@@ -196,6 +189,11 @@ class MainActivity : AppCompatActivity() {
     private fun setupSettings() {
         binding.btnSetting.setOnClickListener {
             startActivity(Intent(this, SettingsActivity::class.java))
+        }
+    }
+    private fun setupMoveBuma() {
+        binding.btnHerbs.setOnClickListener {
+            startActivity(Intent(this, BumaActivity::class.java))
         }
     }
 

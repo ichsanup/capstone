@@ -1,8 +1,8 @@
 package com.dicoding.picodiploma.capstoneproject.main
 
 import android.content.Intent
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import androidx.appcompat.app.AppCompatActivity
 import com.dicoding.picodiploma.capstoneproject.databinding.ActivityBackgroundBinding
 
 class BackgroundActivity : AppCompatActivity() {
